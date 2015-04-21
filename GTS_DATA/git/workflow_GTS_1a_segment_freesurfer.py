@@ -15,17 +15,14 @@ import numpy as np
 '========================================================================================'
 
 
-afs_dir_a      =  '/a/projects/nmr093a/probands'
-afs_dir_b      =  '/a/projects/nmr093b/probands'
+afs_dir_a      =  '/xxx'
+afs_dir_b      =  '/xxx'
 
-workspace_a    = 'xxx'
-workspace_b    = '/xxx'
+workspace_a    = '/scr/xxx'
+workspace_b    = '/scr/xxx'
 
-test_pop = [ 'xxx']
 population_a   = [ 'xxx']
-                  # no retest ---- >'KDET', 'NP4T', 'WJ3T',
-
-population_b   = [ 'xxx' ]
+population_b   = [ 'xxx', ]
 
 gm_labels        = [3,8,42,17,18,53,54,11,12,13,26,50,51,52,58,9,10,47,48,49,16,28,60]
 wm_labels        = [2,7,41,46]
