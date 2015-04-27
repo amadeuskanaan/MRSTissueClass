@@ -1,4 +1,4 @@
-__author__ = 'kanaan'
+__author__ = 'kanaan' '2015_04_27'
 
 
 import os
@@ -9,9 +9,16 @@ import nipype.interfaces.fsl as fsl
 # import nipype.pipeline.engine as pe
 # import nipype.interfaces.io as nio
 
-afs_dir        = '/xxx'
-population_young_a = ['xxx']
-workspace_a    = 'xxx'
+populationA     = ['xxx']
+populationB     = ['xxx']
+populationC     = ['xxx']
+
+workspace_a    = '/xxx/study_a'
+workspace_b    = '/xxx/study_b'
+workspace_c    = '/xxx/study_c'
+
+
+
 
 def dice_metric(svs_1, svs_2):
     """
@@ -41,7 +48,7 @@ def dice_metric(svs_1, svs_2):
 
 
 
-def calculate_overlap(population_a, population_b, workspace_a, workspace_b, voxel_name):
+def calculate_overlap_cismat(population_a, population_b, population_c, workspace_a, workspace_b, workspace_c):
 
     #* Retest MRS voxels (STUDY_B) are registered to test MRS voxel (STUDY_A)
     #* The Sorenson Dice metric between the two voxels is calculated to quantif the agreement between the two visits.
@@ -51,60 +58,82 @@ def calculate_overlap(population_a, population_b, workspace_a, workspace_b, voxe
     ## affines of mrs_a and mrs_ are checked.
 
 
-    for subject in population_a and population_b:
+    for subject in population_a and population_b and population_c:
         print '###################################################################################'
-        print '                 Running %s MRS voxel registration for subject %s' %(voxel_name, subject)
+        print '                 Running CISMAT MRS voxel registration for subject %s' %subject
         print '                 ---------------------------------------------------'
         print ''
 
-        anat_a   = os.path.join(workspace_a, subject, 'anatomical_original', 'ANATOMICAL.nii')
-        voxel_a  = os.path.join(workspace_a, subject, 'svs_voxel_mask', '%sa_%s_RDA_MASK.nii'%(subject,voxel_name))
+        anat_a    = os.path.join(workspace_a, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
+        vox_dir_a = os.path.join(workspace_a, subject[0:4], 'svs_voxel_mask')
+        voxel_a   = str([os.path.join(vox_dir_a, vox) for vox in os.listdir(vox_dir_a) if vox.endswith('nii')][0])
 
-        anat_b   = os.path.join(workspace_b, subject, 'anatomical_original', 'ANATOMICAL.nii')
-        voxel_b  = os.path.join(workspace_b, subject, 'svs_voxel_mask', '%sb_%s_RDA_MASK.nii'%(subject,voxel_name))
+        # anat_b    = os.path.join(workspace_b, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
+        # vox_dir_b = os.path.join(workspace_b, subject[0:4], 'svs_voxel_mask')
+        # voxel_b   = str([os.path.join(vox_dir_b, vox) for vox in os.listdir(vox_dir_b) if vox.endswith('nii')][0])
 
+        anat_c    = os.path.join(workspace_c, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
+        vox_dir_c = os.path.join(workspace_c, subject[0:4], 'svs_voxel_mask')
+        voxel_c   = str([os.path.join(vox_dir_c, vox) for vox in os.listdir(vox_dir_c) if vox.endswith('nii')][0])
+
+        print voxel_a
+        #print voxel_b
+        print voxel_c
+
+
+        #create output dir
         try:
-           os.makedirs(os.path.join(os.path.join(workspace_b, subject, 'dice')))
+           os.makedirs(os.path.join(os.path.join(workspace_c, subject[0:4], 'dice')))
         except OSError:
             pass
 
-        dice_dir = os.path.join(os.path.join(workspace_b, subject, 'dice'))
+        dice_dir_c = os.path.join(os.path.join(workspace_c, subject[0:4], 'dice'))
 
-        if os.path.isfile(os.path.join(dice_dir, 'anat_b2a.nii.gz')):
+
+        print '========================================================================================'
+        print '                              Running VOXEL C to A Registration                         '
+        print '========================================================================================'
+
+        if os.path.isfile(os.path.join(dice_dir_c, 'anat_c2a.nii.gz')):
             print 'Anatomical registration already completed...moving on'
         else:
-            print 'Registering anat_b to anat_a'
+            print 'Registering anat_c to anat_a'
             # Running registration anat_a to anat_b
             import nipype.interfaces.fsl as fsl
-            flirt = fsl.FLIRT ( bins=640, cost_func= 'mutualinfo')
-            flirt.inputs.in_file         = anat_b
+            flirt = fsl.FLIRT (bins =256, dof = 6,  cost_func='mutualinfo')
+            flirt.inputs.in_file         = anat_c
             flirt.inputs.reference       = anat_a
-            flirt.inputs.out_file        = os.path.join(dice_dir, 'anat_b2a.nii.gz')
-            flirt.inputs.out_matrix_file = os.path.join(dice_dir, 'anat_b2a.mat')
+            flirt.inputs.searchr_x       = [-90,90]
+            flirt.inputs.searchr_y       = [-90,90]
+            flirt.inputs.searchr_z       = [-90,90]
+            flirt.inputs.out_file        = os.path.join(dice_dir_c, 'anat_c2a.nii.gz')
+            flirt.inputs.out_matrix_file = os.path.join(dice_dir_c, 'anat_c2a.mat')
             flirt.run()
 
-        # apply transform to voxel_b
-        print 'Registering voxe_b to voxel_a'
-        mat = os.path.join(dice_dir, 'anat_b2a.mat')
+        # apply transform to voxel_c
+        print 'Registering voxe_c to voxel_a'
+        mat_c2a = os.path.join(dice_dir_c, 'anat_c2a.mat')
         from nipype.interfaces import fsl
         apply_xfm                        = fsl.ApplyXfm()
-        apply_xfm.inputs.in_file         = voxel_b
-        apply_xfm.inputs.in_matrix_file  = mat
-        apply_xfm.inputs.out_file        = os.path.join(dice_dir, '%s_b2a.nii.gz'%voxel_name)
+        apply_xfm.inputs.in_file         = voxel_c
+        apply_xfm.inputs.in_matrix_file  = mat_c2a
+        apply_xfm.inputs.out_file        = os.path.join(dice_dir_c, 'svs_c2a.nii.gz')
         apply_xfm.inputs.reference       = anat_a
         apply_xfm.inputs.apply_xfm       = True
         apply_xfm.run()
 
-        voxel_b2a = os.path.join(dice_dir, '%s_b2a.nii.gz'%voxel_name)
-        dice_file = os.path.join(dice_dir, 'dice_%s.txt'%voxel_name)
+        voxel_c2a = os.path.join(dice_dir_c, 'svs_c2a.nii.gz')
+        dice_file_c2a = os.path.join(dice_dir_c, 'dice_c2a.txt')
 
         # calculate dice
         print 'Calculating Dice Metric'
-        dice_val   = dice_metric(voxel_b2a, voxel_a)
-        dice_write = open(dice_file, 'w')
-        dice_write.write('%s'%dice_val)
-        dice_write.close()
+        dice_c2a   = dice_metric(voxel_c2a, voxel_a)
+        dice_c2a_write = open(dice_file_c2a, 'w')
+        dice_c2a_write.write('%s'%dice_c2a)
+        dice_c2a_write.close()
 
-calculate_overlap(population_a, population_b, workspace_a, workspace_b, 'ACC')
-calculate_overlap(population_a, population_b, workspace_a, workspace_b, 'THA')
-calculate_overlap(population_a, population_b, workspace_a, workspace_b, 'STR')
+
+'######################################################################################################################################'
+
+if __name__ == "__main__":
+    calculate_overlap_cismat(populationA, populationB, populationC, workspace_a, workspace_b, workspace_c)
