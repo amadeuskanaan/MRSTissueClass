@@ -48,6 +48,7 @@ def dice_metric(svs_1, svs_2):
 
 
 
+
 def calculate_overlap_cismat(population_a, population_b, population_c, workspace_a, workspace_b, workspace_c):
 
     #* Retest MRS voxels (STUDY_B) are registered to test MRS voxel (STUDY_A)
@@ -68,9 +69,9 @@ def calculate_overlap_cismat(population_a, population_b, population_c, workspace
         vox_dir_a = os.path.join(workspace_a, subject[0:4], 'svs_voxel_mask')
         voxel_a   = str([os.path.join(vox_dir_a, vox) for vox in os.listdir(vox_dir_a) if vox.endswith('nii')][0])
 
-        # anat_b    = os.path.join(workspace_b, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
-        # vox_dir_b = os.path.join(workspace_b, subject[0:4], 'svs_voxel_mask')
-        # voxel_b   = str([os.path.join(vox_dir_b, vox) for vox in os.listdir(vox_dir_b) if vox.endswith('nii')][0])
+        anat_b    = os.path.join(workspace_b, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
+        vox_dir_b = os.path.join(workspace_b, subject[0:4], 'svs_voxel_mask')
+        voxel_b   = str([os.path.join(vox_dir_b, vox) for vox in os.listdir(vox_dir_b) if vox.endswith('nii')][0])
 
         anat_c    = os.path.join(workspace_c, subject[0:4], 'anatomical_original', 'ANATOMICAL.nii')
         vox_dir_c = os.path.join(workspace_c, subject[0:4], 'svs_voxel_mask')
@@ -91,46 +92,46 @@ def calculate_overlap_cismat(population_a, population_b, population_c, workspace
 
 
         print '========================================================================================'
-        print '                              Running VOXEL C to A Registration                         '
+        print '                              Running VOXEL C to B Registration                         '
         print '========================================================================================'
 
-        if os.path.isfile(os.path.join(dice_dir_c, 'anat_c2a.nii.gz')):
+        if os.path.isfile(os.path.join(dice_dir_c, 'anat_c2b.nii.gz')):
             print 'Anatomical registration already completed...moving on'
         else:
-            print 'Registering anat_c to anat_a'
+            print 'Registering anat_c to anat_b'
             # Running registration anat_a to anat_b
             import nipype.interfaces.fsl as fsl
             flirt = fsl.FLIRT (bins =256, dof = 6,  cost_func='mutualinfo')
             flirt.inputs.in_file         = anat_c
-            flirt.inputs.reference       = anat_a
+            flirt.inputs.reference       = anat_b
             flirt.inputs.searchr_x       = [-90,90]
             flirt.inputs.searchr_y       = [-90,90]
             flirt.inputs.searchr_z       = [-90,90]
-            flirt.inputs.out_file        = os.path.join(dice_dir_c, 'anat_c2a.nii.gz')
-            flirt.inputs.out_matrix_file = os.path.join(dice_dir_c, 'anat_c2a.mat')
+            flirt.inputs.out_file        = os.path.join(dice_dir_c, 'anat_c2b.nii.gz')
+            flirt.inputs.out_matrix_file = os.path.join(dice_dir_c, 'anat_c2b.mat')
             flirt.run()
 
         # apply transform to voxel_c
-        print 'Registering voxe_c to voxel_a'
-        mat_c2a = os.path.join(dice_dir_c, 'anat_c2a.mat')
+        print 'Registering voxe_c to voxel_b'
+        mat_c2b = os.path.join(dice_dir_c, 'anat_c2b.mat')
         from nipype.interfaces import fsl
         apply_xfm                        = fsl.ApplyXfm()
         apply_xfm.inputs.in_file         = voxel_c
-        apply_xfm.inputs.in_matrix_file  = mat_c2a
-        apply_xfm.inputs.out_file        = os.path.join(dice_dir_c, 'svs_c2a.nii.gz')
-        apply_xfm.inputs.reference       = anat_a
+        apply_xfm.inputs.in_matrix_file  = mat_c2b
+        apply_xfm.inputs.out_file        = os.path.join(dice_dir_c, 'svs_c2b.nii.gz')
+        apply_xfm.inputs.reference       = anat_c
         apply_xfm.inputs.apply_xfm       = True
         apply_xfm.run()
 
-        voxel_c2a = os.path.join(dice_dir_c, 'svs_c2a.nii.gz')
-        dice_file_c2a = os.path.join(dice_dir_c, 'dice_c2a.txt')
+        voxel_c2b = os.path.join(dice_dir_c, 'svs_c2b.nii.gz')
+        dice_file_c2b = os.path.join(dice_dir_c, 'dice_c2b.txt')
 
         # calculate dice
         print 'Calculating Dice Metric'
-        dice_c2a   = dice_metric(voxel_c2a, voxel_a)
-        dice_c2a_write = open(dice_file_c2a, 'w')
-        dice_c2a_write.write('%s'%dice_c2a)
-        dice_c2a_write.close()
+        dice_c2b   = dice_metric(voxel_c2b, voxel_b)
+        dice_c2b_write = open(dice_file_c2b, 'w')
+        dice_c2b_write.write('%s'%dice_c2b)
+        dice_c2b_write.close()
 
 
 '######################################################################################################################################'
