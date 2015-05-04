@@ -133,3 +133,49 @@ def calc_cv(workspace_a, workspace_b):
 
     return lcm_cv, spm_cv, fsl_cv, fsu_cv
 
+
+
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+#
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+#
+# ## the data
+# N = 7
+# lcmx = [mean(lcm['Cre']), mean(lcm['GPC+PCh']),  mean(lcm['NAA+NAAG']),  mean(lcm['mI']),
+#         mean(lcm['Glu']), mean(lcm['Gln'])   ,   mean(lcm['Glu+Gln'])  ]
+#
+# spmx = [mean(spm['Cre']), mean(spm['GPC+PCh']),  mean(spm['NAA+NAAG']),  mean(spm['mI']),
+#        mean(spm['Glu']),  mean(spm['Gln'])     , mean(spm['Glu+Gln']) ]
+#
+# fslx = [mean(fsl['Cre']), mean(fsl['GPC+PCh']),  mean(fsl['NAA+NAAG']),  mean(fsl['mI']),
+#        mean(fsl['Glu']),  mean(fsl['Gln'])     , mean(fsl['Glu+Gln']) ]
+#
+# fsux = [mean(fsu['Cre']), mean(fsu['GPC+PCh']), mean(fsu['NAA+NAAG']),   mean(fsu['mI']),
+#        mean(fsu['Glu']),  mean(fsu['Gln'])     , mean(fsu['Glu+Gln']) ]
+#
+# ## necessary variables
+# ind = np.arange(N)                # the x locations for the groups
+# width = 0.2
+# ## the bars
+# rects1 = ax.bar(ind, lcmx, width, color='black')
+# rects2 = ax.bar(ind+width, spmx, width, color='red')
+# rects3 = ax.bar(ind+width*2, fslx, width, color='blue')
+# rects4 = ax.bar(ind+width*3, fsux, width, color='green')
+#
+# # axes and labels
+# ax.set_xlim(-width,len(ind)+width)
+# ax.set_ylim(0,20)
+# ax.set_ylabel('Mean CV')
+# ax.set_title('Test-Retest reliability for uncorrected and corrected metabolite concentrations')
+# xTickMarks = ['tCr', 'tCho', 'tNAA', 'mInos', 'Glu', 'Gln', 'Glx']
+# ax.set_xticks(ind+width)
+# xtickNames = ax.set_xticklabels(xTickMarks)
+# plt.setp(xtickNames, rotation=45, fontsize=10)
+#
+# ## add a legend
+# #ax.legend( (rects1[0], rects2[0], rects3[0], rects4[0]), ('LCM', 'SPM', 'FSL'))
+#
+# plt.show()
