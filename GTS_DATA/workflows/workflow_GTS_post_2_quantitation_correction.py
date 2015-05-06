@@ -49,10 +49,36 @@ def quantitation_correction(population, workspace_dir, voxel_name):
     glutamine  = quantitation[' Gln']
     glx        = quantitation[' Glu+Gln']
 
-
     def correct(lcmodel, frac_gm, frac_wm, frac_csf):
-        Cmet =  (lcmodel *  (((frac_csf * 1. * (1. - frac_csf)) + (frac_gm * 0.81 + frac_wm * 0.71))/ (1. - frac_csf )))
-        return Cmet
+
+        import math
+
+        #lcmodel correction factor
+        factor =(55.55 / (35.88 * 0.7))
+
+        # relative water content in tissue.. determined experimentally.
+        alpha_gm  = 0.81
+        alpha_wm  = 0.71
+        alpha_csf = 1.0
+
+        #attentuation factor for water
+        R_H2O_GM  = (1.0-math.e**(-3000.0/1820.0)) * math.e**(-30.0/99.0)
+        R_H2O_WM  = (1.0-math.e**(-3000.0/1084.0)) * math.e**(-30.0/69.0)
+        R_H2O_CSF = (1.0-math.e**(-3000.0/4163.0)) * math.e**(-30.0/503.0)
+
+        #########  Correction Equations  #######
+        # tissel equation
+        Cmet1 =  (lcmodel    *   (((frac_csf    * 1. * (1. - frac_csf)) + (frac_gm * 0.81 + frac_wm * 0.71))/ (1. - frac_csf )))
+
+        # gusseuw equation
+        Cmet2  =  (lcmodel)   *   ((( frac_gm    * alpha_gm    * R_H2O_GM  +
+                                     frac_wm    * alpha_wm    * R_H2O_WM  +
+                                     frac_csf   * alpha_csf   * R_H2O_CSF ) /
+                                    (frac_gm    * 1.0    + frac_wm * 1.0))) * factor
+        # gusseew csf equation
+        Cmet3 = (lcmodel)   * (1/ (1-frac_csf) )
+
+        return Cmet2
 
     #########################################################################################################
     #spm
